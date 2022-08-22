@@ -60,6 +60,11 @@
     </div>
     <footer>by <a href="https://mogery.me">mogery</a> &bull; <a href="https://github.com/mogery/arewewidevineyet">source code</a></footer>
     <script>
+        if (window.location.protocol != "https:") {
+            // redirect to HTTPS, since EME is unsupported on HTTP
+            window.location.protocol = "https:";
+        }
+
         (async () => {
             let contentTypes = [
                 'video/mp4; codecs="avc1.42c00d"',
