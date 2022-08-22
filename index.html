@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        *:not(code) {
+            font-family: 'Inter', sans-serif;
+        }
+
+        #centerer {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #title {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        #results {
+            border-collapse: separate;
+            border-spacing: 1rem;
+        }
+
+        #results td:not(:first-of-type) {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="centerer">
+        <h1 id="title">loading...</h1>
+        <table id="results">
+            <tr>
+                <td>codec</td>
+                <td>L3</td>
+                <td>L2</td>
+                <td>L1</td>
+            </tr>
+        </table>
+    </div>
+    <footer>by <a href="https://mogery.me">mogery</a> &bull; <a href="https://github.com/mogery/arewewidevineyet">source code</a></footer>
+    <script>
+        (async () => {
+            let contentTypes = [
+                'video/mp4; codecs="avc1.42c00d"',
+                'video/mp4; codecs="ec-3"',
+                'video/webm; codecs="vorbis,vp8"',
+                'video/mp2t; codecs="avc1.42E01E,mp4a.40.2"',
+            ]
+
+            let levels = {
+                "SW_SECURE_CRYPTO": "L3",
+                "HW_SECURE_CRYPTO": "L2",
+                "HW_SECURE_ALL": "L1",
+            };
+
+            let best_level = -1;
+
+            let table = document.getElementById("results");
+
+            for (let contentType of contentTypes) {
+                let row = document.createElement("tr");
+
+                {
+                    let ct = document.createElement("td");
+                    let ctc = document.createElement("code");
+                    ctc.innerText = contentType;
+                    ct.appendChild(ctc);
+                    row.appendChild(ct);
+                }
+
+                for (let robustness in levels) {
+                    let ok = true;
+
+                    try {
+                        await navigator.requestMediaKeySystemAccess(
+                            "com.widevine.alpha",
+                            [{
+                                videoCapabilities: [{
+                                    contentType,
+                                    robustness
+                                }]
+                            }]
+                        );
+                    } catch (e) {
+                        ok = false;
+                    }
+                    
+                    let r = document.createElement("td");
+                    r.innerText = ok ? "✅" : "❌";
+                    row.appendChild(r);
+
+                    if (ok) {
+                        let cur = Object.keys(levels).indexOf(robustness);
+                        if (cur > best_level) {
+                            best_level = cur;
+                        }
+                    }
+                }
+
+                table.appendChild(row);
+            }
+
+            let title = document.getElementById("title");
+
+            if (best_level == -1) {
+                title.innerText = "no."
+            } else {
+                title.innerText = "yes, " + levels[Object.keys(levels)[best_level]] + ".";
+            }
+        })();
+    </script>
+</body>
+</html>
